@@ -19,16 +19,17 @@
 
 ## Páginas
 
-| Ruta                                      | Quién entra                                                              | Para qué sirve                                                                            | Cómo se llega                                               |
-| ----------------------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `/`                                       | Todos                                                                    | Landing: servicios, barberos y contacto                                                   | URL directa; logo del header                                |
-| `/#servicios`, `/#barberos`, `/#contacto` | Todos                                                                    | Anclas dentro de la landing                                                               | Menú                                                        |
-| `/reservar`                               | Solo con sesión                                                          | Flujo por pasos: servicio → barbero → fecha/hora → confirmación                           | Botón RESERVAR; menú con sesión                             |
-| `/acceso`                                 | Sin sesión (con sesión redirige a `/mis-citas`)                          | Login y registro (dos estados)                                                            | Menú «Login» o redirección desde una ruta protegida         |
-| `/panel`                                  | Cliente, barbero y barbero admin                                         | Cuenta: editar nombre, correo y teléfono; el admin, además, ajustes de gestión (a futuro) | Menú con sesión («Mi cuenta»)                               |
-| `/mis-citas`                              | Cliente, barbero y barbero admin                                         | Lista de citas ordenada por fecha, según el rol                                           | Menú con sesión («Mis citas» / «Agenda»); botón en `/panel` |
-| `/modificar-cita/:id`                     | Cliente, barbero y barbero admin (solo si tienen permiso sobre esa cita) | Cambiar o cancelar una cita                                                               | Botón en cada cita de `/mis-citas`                          |
-| `*` (404)                                 | Todos                                                                    | Página no encontrada, con enlace a la landing                                             | URL mal escrita                                             |
+| Ruta                                      | Quién entra                                                              | Para qué sirve                                                                            | Cómo se llega                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `/`                                       | Todos                                                                    | Landing: servicios, barberos y contacto                                                   | URL directa; logo del header                                             |
+| `/#servicios`, `/#barberos`, `/#contacto` | Todos                                                                    | Anclas dentro de la landing                                                               | Menú                                                                     |
+| `/reservar`                               | Solo con sesión                                                          | Flujo por pasos: servicio → barbero → fecha/hora → confirmación                           | Botón RESERVAR; menú con sesión                                          |
+| `/acceso`                                 | Sin sesión (con sesión redirige a `/mis-citas`)                          | Login y registro (dos estados)                                                            | Menú «Login» o redirección desde una ruta protegida                      |
+| `/panel`                                  | Cliente, barbero y barbero admin                                         | Cuenta: editar nombre, correo y teléfono; el admin, además, ajustes de gestión (a futuro) | Menú con sesión («Mi cuenta»)                                            |
+| `/mis-citas`                              | Cliente, barbero y barbero admin                                         | Lista de citas ordenada por fecha, según el rol                                           | Menú con sesión («Mis citas» / «Agenda»); botón en `/panel`              |
+| `/modificar-cita/:id`                     | Cliente, barbero y barbero admin (solo si tienen permiso sobre esa cita) | Cambiar o cancelar una cita                                                               | Botón en cada cita de `/mis-citas`                                       |
+| `/privacidad`                             | Todos                                                                    | Política de privacidad: qué datos se guardan, para qué y cómo ejercer los derechos (RGPD) | Enlace en el `footer`; casilla de aceptación en el registro de `/acceso` |
+| `*` (404)                                 | Todos                                                                    | Página no encontrada, con enlace a la landing                                             | URL mal escrita                                                          |
 
 ## Reglas de acceso
 
@@ -37,6 +38,7 @@
 - **Seguridad de `volver`:** solo se aceptan rutas internas (empiezan por `/`), para evitar redirecciones a sitios externos.
 - **Cita inexistente o ajena:** el backend responde 404 (no 403) y el frontend muestra la pantalla 404.
 - **Cambio de correo:** exige la contraseña actual (sin verificación por correo en v1).
+- **Registro:** exige aceptar la política de privacidad (`/privacidad`) antes de crear la cuenta.
 
 ## Menú de navegación (overlay en móvil)
 
@@ -73,6 +75,7 @@ La vista `/mis-citas` es la misma para todos los roles, con componentes que var�
 - 🟡 Reglas de cancelación (antelación mínima, citas pasadas).
 - 🟡 Agrupación de la lista: por días o por semanas (se decide al diseñar `/mis-citas`).
 - 🟡 Verificación del correo al cambiarlo (requeriría envío de correo).
+- 🟡 Redactar el texto de la política de privacidad (revisión legal) y decidir si hace falta aviso de cookies (depende de si usamos analítica o mapas incrustados).
 
 ## Aplazado a v2
 
