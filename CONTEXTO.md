@@ -36,7 +36,8 @@ para mí (2º DAW). Debe estar online 365 días al año.
 - Jerarquía de títulos: `h1` = frase del hero (uno por página), `h2` = título de
   cada sección, `h3` = cada servicio / cada barbero.
 - Patrón de selección (todo el proyecto): elemento elegido = borde dorado `#dccc8d`
-  brillante con sombra (glow) del mismo color.
+  brillante con sombra (glow) del mismo color. En los wireframes de FigJam basta un borde
+  dorado grueso con una nota «borde dorado + glow»; el glow real se hace en Figma Design.
 - Teléfono de la barbería: un solo dato reutilizado (contacto, avisos, estados vacíos),
   siempre como enlace `tel:`. De momento marcador `XXXXXXXXX`; irá el real.
 
@@ -78,8 +79,9 @@ para mí (2º DAW). Debe estar online 365 días al año.
   (p. ej. cambiar el servicio descarta la hora).
 
 **Barra de progreso**
-- Móvil (390): un segmento por paso (actual dorado, completados dorado atenuado y tocables,
-  futuros grises y no tocables) y debajo «Paso 2 de 4 · Barbero». Área táctil ≥ 44 px.
+- Móvil (390): un segmento por paso; el actual (dorado) muestra el nombre del paso, el resto solo
+  su número (completados dorado atenuado y tocables, futuros grises y no tocables). Sin línea
+  «Paso X de N» debajo: ese texto va en el `aria-label`. Área táctil ≥ 44 px.
 - Tableta y escritorio: etiquetas completas de cada paso (misma lógica, otra presentación).
 - A la izquierda, flecha/X: en el paso 1 lleva a `/`; en los demás vuelve al paso anterior.
   Salir con la X no pregunta, salvo en el resumen, donde pide confirmación.
@@ -88,17 +90,21 @@ para mí (2º DAW). Debe estar online 365 días al año.
 - **Servicio:** tarjeta mínima (nombre, duración, precio), una por fila a todo el ancho.
   Lista vacía o fallo de la petición: mensaje con teléfono dentro del módulo (no 404). Estado «cargando».
 - **Barbero:** tres tarjetas iguales (barbero 1, barbero 2, «Cualquiera»). «Cualquiera» lleva la
-  línea «Quien esté libre a tu hora». Sin foto: inicial en círculo dorado (placeholder; irán fotos reales);
+  línea «Barbero disponible». Sin foto: inicial en círculo dorado (placeholder; irán fotos reales);
   «Cualquiera» con icono genérico.
 - **Fecha y hora:** `<select>` con los 14 días («Hoy · dom 11 oct»…); días sin huecos desactivados y
   marcados «· sin huecos»; primer día con huecos preseleccionado. Debajo, horas en cuadrícula de
-  2 columnas (orden por filas: 1 2 / 3 4), agrupadas en «Mañana» y «Tarde», solo «10:00», «10:30».
+  2 columnas (orden por filas: 1 2 / 3 4), sin títulos de grupo (el salto de horas ya separa mañana
+  y tarde), solo «10:00», «10:30». Las horas ocupadas se muestran desactivadas (sin borde, texto atenuado).
   Con «Cualquiera», un hueco existe si al menos un barbero está libre. Estados: día sin huecos
   («Sin huecos este día»), ningún día con huecos («No hay huecos en los próximos 14 días. Llama al …»), cargando.
-- **¿Para quién? (barbero y admin):** un campo «Teléfono o correo del cliente» (si contiene `@`, es correo) y «Buscar».
-  Con resultado: tarjeta con nombre y teléfono (nunca correo ni citas), «¿Es esta persona?» y «Cambiar cliente».
-  Sin resultado: «No encontrado. Introduce sus datos» con nombre y teléfono (teléfono ya relleno si se buscó por teléfono).
-  Nombre y teléfono obligatorios, con error bajo cada campo.
+- **¿Para quién? (barbero y admin):** en la barra el segmento se llama «Cliente». Un campo «Cliente:»
+  (teléfono o correo; si contiene `@`, es correo) y «Buscar». Con resultado: nombre y teléfono en línea,
+  bajo el campo (nunca correo ni citas), y «Continuar»; si no es la persona, se busca de nuevo (editar el
+  campo invalida el resultado). Sin resultado: «Cliente no encontrado» y formulario «Nuevo cliente» con
+  nombre y teléfono (teléfono ya relleno si se buscó por teléfono). Nombre y teléfono obligatorios, con
+  error bajo cada campo. Sin popups ni «Cambiar cliente». El botón «Continuar» va dentro del contenido
+  (no fijo): el módulo crece y decrece según el estado.
 - **Resumen:** tarjeta con servicio, barbero, día y hora (y cliente para el personal). Con «Cualquiera»:
   «Se te asignará al confirmar». Aviso dorado **debajo de los datos y encima del botón**, solo si la cita
   empieza en menos de 6 h: solo se puede cambiar o cancelar por teléfono (enlace `tel:`).
@@ -217,8 +223,11 @@ proyecto: se partirá en tareas internas al planificar la construcción.
   03.1 Modificar cita (aplazada a v2), 04 Mi cuenta (`/panel`), 05 Login / Registro,
   06 Horarios (admin), 07 Privacidad y 404, más `Mapa del Sitio`.
   Las secciones 03-07 aún pueden ser copias de la landing.
-- Siguiente: paso 4 (parte de dibujo) → dibujar `/reservar` en FigJam, módulo a módulo.
-  Después, paso 5 → sistema de diseño en Figma.
+- Paso 4, dibujo en FigJam (sección `02 · Reservar cita`): hechos Servicio, Barbero y Fecha y hora,
+  con sus componentes. Faltan ¿Para quién?, Resumen y Confirmación, y un frame de 768 y otro de 1440.
+  Organización: matriz con un paso por columna y sus estados hacia abajo; los estados secundarios,
+  recortados al módulo central.
+- Siguiente: terminar el dibujo de `/reservar`. Después, paso 5 → sistema de diseño en Figma.
 
 ## Convenciones
 
