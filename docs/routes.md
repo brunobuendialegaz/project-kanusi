@@ -1,12 +1,13 @@
 # Mapa del sitio y rutas
 
-> Estado: **cerrado en el paso 3** (fase 0); flujo de `/reservar` ampliado en el **paso 4**. Las filas marcadas con 🟡 siguen pendientes de decisión.
+> Estado: **cerrado en el paso 3** (fase 0); pantallas detalladas en el **paso 4** (wireframes móvil terminados). Las filas marcadas con 🟡 siguen pendientes de decisión.
 
 ## Convenciones
 
 - Las rutas visibles (URL) están en **español**; componentes, archivos y variables, en **inglés**.
 - Los `id` de las anclas van en minúscula y en español (`#servicios`), porque aparecen en la URL.
 - Las rutas de la API (backend) no se rigen por esta tabla; se definirán aparte.
+- Sin popups, salvo el `ConfirmDialog` para confirmar acciones destructivas (cancelar una cita, quitar un horario). El flujo `/reservar` no usa ninguno.
 
 ## Roles
 
@@ -25,23 +26,44 @@
 |---|---|---|---|
 | `/` | Todos | Landing: servicios, barberos y contacto | URL directa; logo del header |
 | `/#servicios`, `/#barberos`, `/#contacto` | Todos | Anclas dentro de la landing | Menú |
-| `/reservar` | Solo con sesión | Flujo de un módulo visible a la vez (ver «Flujo de `/reservar`»). Cliente: servicio → barbero → fecha/hora → confirmar. Barbero: ¿para quién? → servicio → fecha/hora → confirmar. Admin: ¿para quién? → servicio → barbero → fecha/hora → confirmar | Botón RESERVAR; menú con sesión |
-| `/acceso` | Sin sesión (con sesión redirige a `/mis-citas`) | Login y registro (dos estados) | Menú «Login» o redirección desde una ruta protegida |
-| `/panel` | Cliente, barbero y barbero admin | Cuenta: editar nombre, correo y teléfono. Admin, además: alta de barberos y botón a `/horarios` | Menú con sesión («Mi cuenta») |
-| `/mis-citas` | Cliente, barbero y barbero admin | Lista de citas ordenada por fecha, según el rol; permite cancelar | Menú con sesión («Mis citas» / «Agenda»); botón en `/panel`; botones finales de `/reservar` |
-| `/horarios` | Solo barbero admin | Definir el horario de cada barbero día a día (fecha y franjas); tras guardar, listado de citas en conflicto | Botón en el bloque de gestión de `/panel` |
-| `/privacidad` | Todos | Política de privacidad: qué datos se guardan, para qué y cómo ejercer los derechos (RGPD) | Enlace en el `footer`; casilla de aceptación en el registro de `/acceso` |
-| `*` (404) | Todos | Página no encontrada, con enlace a la landing | URL mal escrita |
+| `/reservar` | Solo con sesión | Flujo de un módulo visible a la vez (ver «Flujo de `/reservar`»). Cliente: servicio → barbero → fecha/hora → resumen. Barbero: ¿para quién? → servicio → fecha/hora → resumen. Admin: ¿para quién? → servicio → barbero → fecha/hora → resumen | Botón RESERVAR; menú con sesión |
+| `/acceso` | Sin sesión (con sesión redirige a `/mis-citas`) | Login y registro: dos módulos, con enlace al pie para pasar del uno al otro | Menú «Login» o redirección desde una ruta protegida |
+| `/panel` | Cliente, barbero y barbero admin | Cuenta: editar nombre y teléfono (el correo se ve pero no se edita) y cambiar contraseña. Admin, además: bloque «Gestión» con alta de barberos y botón a `/horarios` | Menú con sesión («Mi cuenta») |
+| `/mis-citas` | Cliente, barbero y barbero admin | Lista de citas según el rol, con filtro «Pendientes» / «Todas»; permite cancelar | Menú con sesión («Mis citas» / «Agenda»); botones finales de `/reservar` |
+| `/horarios` | Solo barbero admin | Definir el horario de un barbero con selección múltiple de días y una o dos franjas; listar y quitar horarios; ver citas en conflicto | Botón «Horarios» en el bloque «Gestión» de `/panel` |
+| `/privacidad` | Todos | Política de privacidad: responsable, qué datos se guardan, para qué, cuánto tiempo, derechos (RGPD) y contacto | Enlace en el `footer`; casilla de aceptación en el registro de `/acceso` |
+| `*` (404) | Todos | Página no encontrada, con botón «Volver al inicio» | URL mal escrita; cita ajena; `/horarios` sin ser admin |
 
 ## Reglas de acceso
 
 - **Rutas protegidas:** `/reservar`, `/panel`, `/mis-citas` y `/horarios`. Sin sesión, se redirige a `/acceso?volver=<ruta>` (la ruta va codificada).
 - **Rutas por rol:** `/horarios` es solo para el barbero admin. Para otros roles, el backend rechaza la petición y el frontend muestra la pantalla 404.
-- **Redirección tras el login:** se vuelve a la ruta indicada en `volver`; si no hay, a `/mis-citas`.
+- **Redirección tras el login y tras el registro:** se vuelve a la ruta indicada en `volver`; si no hay, a `/mis-citas`.
 - **Seguridad de `volver`:** solo se aceptan rutas internas (empiezan por `/`), para evitar redirecciones a sitios externos.
 - **Cita inexistente o ajena:** el backend responde 404 (no 403) y el frontend muestra la pantalla 404.
-- **Registro:** exige marcar la casilla de aceptación de la política de privacidad (`/privacidad`), porque se guardan datos personales, y un teléfono. El registro público siempre crea un cliente.
-- **Cambio de correo:** exige la contraseña actual (sin verificación por correo en v1).
+- **Registro:** exige marcar la casilla de aceptación de la política de privacidad (`/privacidad`), porque se guardan datos personales, y un teléfono. El registro público siempre crea un cliente (el campo `role` se ignora).
+- **Correo:** no es editable en v1; se cambia llamando a la barbería (lo hace el admin).
+- **Seguridad:** los permisos se comprueban siempre en el backend (`RolesGuard`, denegar por defecto); el rol sale del token verificado o de la BD, nunca del cliente. Ocultar un bloque en el frontend es solo comodidad.
+
+## Pantalla `/acceso`
+
+| Módulo | Contenido |
+|---|---|
+| Login (inicial) | Correo, Contraseña, «Entrar», enlace «¿No tienes cuenta? Regístrate» y texto fijo «¿Olvidaste tu contraseña? Llama al [teléfono]» (`tel:`) |
+| Registro | Nombre, Correo, Teléfono, Contraseña, Repetir contraseña, casilla «He leído y acepto la política de privacidad» (enlace a `/privacidad` en pestaña nueva), «Crear cuenta» y enlace «¿Ya tienes cuenta? Entra» |
+
+- Al cambiar de módulo, el foco va al primer campo.
+- Errores bajo cada campo al pulsar el botón; el foco va al primer error. Login: un solo mensaje sobre el botón («Correo o contraseña incorrectos»).
+- Correo ya registrado: error bajo Correo. Fallo de red: mensaje sobre el botón, que vuelve a estar activo.
+- Estados «Entrando…» y «Creando cuenta…» (botón desactivado).
+- Tras registrarse entra directamente con sesión iniciada.
+
+## Pantalla `/panel`
+
+- Una sola página; los bloques cambian según el rol. Cliente y barbero ven lo mismo; el admin, además, «Gestión». No lleva «Cerrar sesión» (está en el menú).
+- **Mis datos:** nombre y teléfono editables, botón «Guardar» («Guardando…», «Datos guardados»). Correo en texto plano con la nota «Para cambiarlo, llama al [teléfono]».
+- **Cambiar contraseña** (todos): contraseña actual, nueva y repetir; «Contraseña cambiada» o error «La contraseña actual no es correcta».
+- **Gestión (admin):** «Dar de alta barbero» abre en el mismo módulo un formulario con nombre, correo, teléfono y contraseña inicial (todos obligatorios, «Crear barbero», «Barbero creado»; correo existente: error bajo Correo) y «Horarios» lleva a `/horarios`.
 
 ## Menú de navegación (overlay en móvil)
 
@@ -63,21 +85,21 @@ Una sola ruta. Un componente guarda en el estado el paso y lo elegido, y muestra
 
 | Rol | Pasos |
 |---|---|
-| Cliente | 1 Servicio → 2 Barbero → 3 Fecha y hora → 4 Confirmar |
-| Barbero | 1 ¿Para quién? → 2 Servicio → 3 Fecha y hora → 4 Confirmar (barbero fijo en él mismo, no se muestra) |
-| Barbero admin | 1 ¿Para quién? → 2 Servicio → 3 Barbero → 4 Fecha y hora → 5 Confirmar |
+| Cliente | 1 Servicio → 2 Barbero → 3 Fecha y hora → 4 Resumen |
+| Barbero | 1 Cliente (¿para quién?) → 2 Servicio → 3 Fecha y hora → 4 Resumen (barbero fijo en él mismo, no se muestra) |
+| Barbero admin | 1 Cliente (¿para quién?) → 2 Servicio → 3 Barbero → 4 Fecha y hora → 5 Resumen |
 
 ### Comportamiento
 
 - **Servicio y barbero avanzan solos** al tocar. **¿Para quién?** lleva botón «Continuar». Elegir hora lleva al resumen, que no reserva nada. Solo «Confirmar reserva» es irreversible.
 - Lo elegido se conserva al volver; **cambiar una elección invalida lo que depende de ella** (p. ej. cambiar el servicio descarta la hora).
-- **Barra de progreso:** móvil, un segmento por paso con el nombre solo en el actual y número en el resto (completados tocables, futuros no; áreas táctiles ≥ 44 px; «Paso X de N» en el `aria-label`); tableta y escritorio, etiquetas completas. La flecha/X de la izquierda lleva a `/` en el paso 1 y al paso anterior en los demás. Salir con la X no pregunta, salvo en el resumen.
+- **Barra de progreso:** móvil, un segmento por paso con el nombre solo en el actual y número en el resto (completados tocables, futuros no; áreas táctiles ≥ 44 px; «Paso X de N» en el `aria-label`); tableta y escritorio, etiquetas completas. La flecha/X de la izquierda lleva a `/` en el paso 1 y al paso anterior en los demás. La flecha nunca pregunta: al volver se conserva lo elegido. Sin popups en todo el flujo.
 - **Barbero:** tres tarjetas (barbero 1, barbero 2, «Cualquiera»). «Cualquiera» = «Barbero disponible»; el backend asigna un barbero libre y la confirmación muestra cuál.
 - **Fecha y hora:** `<select>` con los 14 días (sin huecos: desactivado y marcado), primer día con huecos preseleccionado, horas en 2 columnas por filas, sin títulos de grupo; las ocupadas se muestran desactivadas. Con «Cualquiera», hay hueco si al menos un barbero está libre.
 - **¿Para quién?:** búsqueda exacta por teléfono o correo (un solo campo; con `@` es correo). Con resultado: nombre y teléfono en línea y «Continuar»; si no es la persona, se busca de nuevo. Sin resultado: «Cliente no encontrado» y formulario con nombre y teléfono obligatorios. En la barra, el segmento se llama «Cliente».
-- **Resumen:** aviso «solo por teléfono» cuando la cita empieza en menos de 6 h, debajo de los datos y encima del botón. Doble toque protegido («Reservando…»). Si la hora se ocupó entretanto, vuelve a fecha y hora con el mismo día seleccionado.
+- **Resumen:** aviso «solo por teléfono» cuando la cita empieza en menos de 6 h, debajo de los datos y encima del botón. Doble toque protegido («Reservando…»). Sin popups: los avisos y errores (hora ocupada, fallo de la petición con «Reintentar») sustituyen la zona del botón dentro de la propia tarjeta. Si la hora se ocupó entretanto, el aviso ofrece volver a fecha y hora con el mismo día seleccionado.
 - **Confirmación (estado final, no es ruta):** cliente → «Ver mis citas» (`/mis-citas`) y «Volver al inicio» (`/`). Personal → «Reservar otra cita» (reinicio limpio en «¿Para quién?») y «Ver agenda» (`/mis-citas`).
-- **Tableta y escritorio (v1):** el mismo módulo centrado con ancho máximo (~480-560 px).
+- **Tableta y escritorio (v1):** el mismo módulo centrado con ancho máximo (~480-560 px). No se dibuja en FigJam; se resuelve en Figma Design.
 
 ### Persistencia
 
@@ -97,7 +119,7 @@ Una sola ruta. Un componente guarda en el estado el paso y lo elegido, y muestra
 
 | Pantalla | Servicio |
 |---|---|
-| `/acceso`, `/panel` | `auth` (usuarios, datos personales, roles, alta de barberos) |
+| `/acceso`, `/panel` | `auth` (usuarios, datos personales, contraseña, roles, alta de barberos) |
 | `/reservar`, `/mis-citas`, `/horarios` | `citas` (servicios, barberos, horarios, citas) |
 
 > La búsqueda de un cliente por teléfono o email (solo barbero y admin, coincidencia exacta) vive en `auth`, y `citas` la consulta. El resultado devuelve solo nombre y teléfono.
@@ -114,9 +136,24 @@ La vista `/mis-citas` es la misma para todos los roles, con componentes que var�
 
 - Los permisos (rol y propiedad de la cita) se comprueban en el backend en **cada acción**, no solo al listar.
 
+### Lista de `/mis-citas`
+
+- **Filtro** de una sola opción: «Pendientes» (por defecto; futuras no canceladas, la más próxima primero) y «Todas» (pasadas, futuras y canceladas, la más reciente primero). 🟡 La carga de «Todas» se limitará al diseñar la API.
+- **Tarjeta por rol:**
+
+| Rol | Línea 1 | Línea 2 |
+|---|---|---|
+| Cliente | Fecha, Hora | Barbero, Servicio |
+| Barbero | Fecha, Hora | Cliente · teléfono, Servicio |
+| Admin | Fecha, Hora, Barbero | Cliente · teléfono, Servicio |
+
+- El teléfono es un enlace `tel:`. Las citas de clientes sin cuenta se muestran igual. En «Todas», las citas canceladas o pasadas muestran «Cancelada» o «Realizada» y no llevan botón.
+- Estados: vacía (Pendientes: «No hay citas pendientes» y, solo para el cliente, botón «Reservar»; Todas: «Aún no hay citas»), cargando y error de carga con «Reintentar».
+
 ## Reglas de cancelación
 
 - **Cancelar no borra:** la cita pasa a estado `cancelled`, libera el hueco y se conserva en el historial. Se guarda quién la canceló y cuándo.
+- **Confirmación:** botón «X» en la tarjeta que abre el `ConfirmDialog` («¿Cancelar esta cita?», fecha y hora, «Mantener cita» y «Sí, cancelar»). Tras confirmar, la cita sale de «Pendientes».
 - **Cliente:** puede cancelar hasta **6 horas antes** del inicio de la cita. Pasado ese plazo, el botón aparece desactivado con un mensaje que invita a contactar con la barbería (WhatsApp o teléfono). Una cita reservada con menos de 6 h de antelación nace ya sin cancelación web, y la confirmación lo avisa.
 - **Barbero y admin:** pueden cancelar sin límite de antelación 🟡, porque son quienes resuelven imprevistos y conflictos de horario.
 - **Citas pasadas:** no se pueden cancelar.
@@ -129,19 +166,27 @@ La vista `/mis-citas` es la misma para todos los roles, con componentes que var�
 - El barbero o el admin busca primero por teléfono o email completos; si existe, confirma que es esa persona y asocia la cita a ese usuario; si no, introduce nombre y teléfono.
 - Sus datos se eliminan cuando dejan de ser necesarios, y la política de privacidad lo recoge.
 
-## Horarios y conflictos
+## Horarios y conflictos (`/horarios`)
 
-- El admin define el horario de cada barbero **día a día** desde `/horarios`: elige barbero y fecha, y añade una o varias franjas (inicio y fin). Ejemplo: lunes 5, de 10:00 a 14:00 y de 16:00 a 20:00.
-- **Un día sin horario no ofrece huecos.** Esto cubre también enfermedades, vacaciones y festivos: basta con no definir ese día.
+- El admin elige **barbero** (desplegable), marca en un **calendario** (`react-day-picker`, selección múltiple) los días que haga falta y define una o dos franjas: Inicio/Fin y Inicio tarde/Fin tarde, en saltos de 30 min. Ambas son opcionales, pero debe haber al menos una completa. «Añadir» guarda las franjas en cada día elegido y **sobrescribe** los días que ya tenían horario. Cada día sigue siendo una entrada individual.
+- **Un día sin horario no ofrece huecos.** Esto cubre también enfermedades, vacaciones y festivos: basta con no definir ese día o quitarlo.
 - Como se reserva hasta 14 días vista, el admin debe tener cargados al menos los próximos 14 días.
-- Un cambio de horario solo afecta a huecos futuros: **las citas ya reservadas se conservan**.
-- Al guardar, se muestra el listado de citas en conflicto (fecha, hora, barbero, nombre y teléfono del cliente). El admin llama por teléfono y cancela a mano. El sistema no cancela ni avisa solo.
-- **Turnos (v2):** un turno es un atajo que genera días individuales (p. ej. L-V, 10-14 y 17-21). Después cada día se modifica por separado. Escribe en la misma tabla que el día a día.
+- **«Listar horarios»:** tarjetas de los días futuros del barbero elegido (hoy incluido), fecha ascendente, una línea por día (`Lun 19 oct · 10:00-14:00 y 17:00-21:00`), cada una con «X» para quitar. Estados: vacía («No hay horarios establecidos»), cargando, error con «Recargar». Al cambiar de barbero, la lista se cierra.
+- **Quitar un día:** `ConfirmDialog` «¿Quitar el horario de [barbero] del [fecha]?» con «Mantener» y «Sí, quitar»; si hay citas ese día, avisa («N citas agendadas»).
+- Un cambio de horario solo afecta a huecos futuros: **las citas ya reservadas se conservan** y conservan su barbero.
+- **Conflicto = una cita que queda fuera del horario nuevo** (al sobrescribir con un horario más corto o al quitar un día). Sobrescribir un día no es un conflicto. Tras guardar o quitar, el mismo módulo muestra «N citas quedan fuera del horario» y una tarjeta por cita (fecha, hora, barbero, cliente, teléfono `tel:`, servicio, «Fuera de horario» y «X» para cancelar con el `ConfirmDialog` de cita). El admin llama por teléfono y cancela a mano. El sistema no cancela ni avisa solo.
+- **Turnos (v2):** un turno es un atajo que genera días individuales (p. ej. L-V, 10-14 y 17-21). Después cada día se modifica por separado. Escribe en la misma tabla.
 
 ## Alta de barberos
 
-- Solo el admin, desde `/panel`: nombre, correo, teléfono y contraseña inicial. El backend asigna el rol.
+- Solo el admin, desde `/panel` (bloque «Gestión» → «Dar de alta barbero»): nombre, correo, teléfono y contraseña inicial. El backend asigna el rol.
 - El primer admin se crea con script.
+
+## Privacidad y 404
+
+- **`/privacidad`:** una página con `h1` y seis `h2` (sin acordeón): Responsable (nombre o razón social, NIF, dirección y correo del titular), Qué datos guardamos, Para qué los usamos, Cuánto tiempo los conservamos, Tus derechos y cómo ejercerlos, Contacto.
+- **Responsable del tratamiento:** el titular del negocio; el desarrollador, como encargado (contrato del art. 28 RGPD). Orientación, no asesoramiento legal.
+- **404:** `h1` «Página no encontrada», una línea y botón «Volver al inicio» (`/`).
 
 ## Pendiente de decidir
 
@@ -151,12 +196,11 @@ La vista `/mis-citas` es la misma para todos los roles, con componentes que var�
 - 🟡 Cómo piden las API la disponibilidad (días con huecos de los 14 y horas de un día).
 - 🟡 Si barbero y admin cancelan sin límite de antelación (propuesto).
 - 🟡 Baja de barberos (desactivar, no borrar, para conservar el historial).
-- 🟡 Cambio obligatorio de la contraseña inicial del barbero en su primer acceso.
-- 🟡 Agrupación de la lista: por días o por semanas (se decide al diseñar `/mis-citas`).
+- 🟡 Cambio obligatorio de la contraseña inicial del barbero en su primer acceso (propuesto: no obligatorio en v1).
+- 🟡 Límite de citas cargadas en «Todas» de `/mis-citas`.
+- 🟡 Titular del negocio y sus datos para «Responsable»; contrato de encargo firmado antes de publicar.
 - 🟡 Redactar el texto de la política de privacidad (revisión legal) y decidir si hace falta aviso de cookies (depende de si usamos analítica o mapas incrustados).
-- 🟡 Verificación del correo al cambiarlo (requeriría envío de correo).
 - 🟡 Cómo se entera `citas` de un barbero nuevo creado en `auth` (modelo de datos).
-- 🟡 (v2) Qué pasa al aplicar un turno sobre un día que ya tiene horario.
 
 ## Aplazado a v2
 
@@ -170,3 +214,5 @@ La vista `/mis-citas` es la misma para todos los roles, con componentes que var�
 - Composiciones propias para tableta y escritorio en `/reservar`.
 - Que un barbero cree citas en la agenda de otro.
 - Fotos reales de los barberos.
+- Reasignar una cita en conflicto a otro barbero desde `/horarios`.
+- Cambio de correo por el propio usuario (requiere verificación por correo).
